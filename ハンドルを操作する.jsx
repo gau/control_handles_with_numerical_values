@@ -12,27 +12,15 @@
 		'not_add_handle' : false,
 		'reverse_motion' : false,
 		'is_smooth' : true,
+		'max_items' : 30,
+		'max_points' : 100,
 		'preview' : true,
 		'onChanging' : true
 	};
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = 'ハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.0';
-
-	// ドキュメントと選択アイテム取得
-	var doc = app.activeDocument;
-	var sel = doc.selection;
-
-	// 対称アイテム取得
-	var target_path_items = get_target_items(sel, 'PathItem');
-
-	// 選択状態を取得
-	var selected_state = get_selected_state(target_path_items);
-
-	// プレビュー用レイヤーの設定
-	var layer_name = '_gau_script_operate_handles_preview_layer';
-	var preview_layer = sel[0].layer;
+	const SCRIPT_VERSION = '0.5.1';
 
 	// PathPointのプロトタイプ
 	function PathPoint(item, index) {
@@ -71,10 +59,26 @@
 		}
 	};
 
+	// ドキュメントと選択アイテム取得
+	var doc = app.activeDocument;
+	var sel = doc.selection;
+
+	// 対称アイテム取得
+	var target_path_items = get_target_items(sel, 'PathItem');
+
+	// 選択状態を取得
+	var selected_state = get_selected_state(target_path_items);
+
+	// 対称のポイントを取得
 	var target_points = [];
+	var target_points_length = 0;
 	for (var i = 0; i < target_path_items.length; i++) {
 		target_points.push(get_target_points(target_path_items[i]));
 	}
+
+	// プレビュー用レイヤーの設定
+	var layer_name = '_gau_script_operate_handles_preview_layer';
+	var preview_layer = sel[0].layer;
 
 	if(typeof settings.preview != 'boolean') settings.preview = false;
 	if(typeof settings.onChanging != 'boolean') settings.onChanging = false;
@@ -268,14 +272,34 @@
 		this.dlg.close();
 	};
 
-	// ダイアログのインスタンスを作成
-	var dialog = new MainDialog();
-
 	// 選択状態の確認とダイアログ実行
-	if(!doc || sel.length < 1 || target_path_items.length < 1) {
+	if (!doc || sel.length < 1 || target_path_items.length < 1) {
 		if(settings.show_alert) alert('対象となるオブジェクトがありません');
 		return false;
+	} else if (target_path_items.length > settings.max_items) {
+		var conf = true;
+		if(settings.show_alert) {
+			conf = confirm('対象のオブジェクトが' + target_path_items.length + 'あります。動作が重くなったりクラッシュの原因となるため、一度に処理するオブジェクトは' + settings.max_items + '以下にしておくことをお勧めします。続けますか？');
+		}
+		if(conf) {
+			var dialog = new MainDialog();
+			dialog.showDialog();
+		} else {
+			return false;
+		}
+	} else if (target_points_length > settings.max_points) {
+		var conf = true;
+		if(settings.show_alert) {
+			conf = confirm('対象のアンカーポイントが' + target_points_length + 'あります。動作が重くなったりクラッシュの原因となるため、一度に処理するアンカーポイントは'+ settings.max_points + '以下にしておくことをお勧めします。続けますか？');
+		}
+		if(conf) {
+			var dialog = new MainDialog();
+			dialog.showDialog();
+		} else {
+			return false;
+		}
 	} else {
+		var dialog = new MainDialog();
 		dialog.showDialog();
 	}
 
@@ -379,6 +403,7 @@
 			}
 			if(point.path_point.selected !== PathPointSelection.NOSELECTION) points.push(point);
 		}
+		target_points_length += points.length;
 		return points;
 	}
 
