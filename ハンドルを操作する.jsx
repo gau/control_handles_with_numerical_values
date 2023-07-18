@@ -2,7 +2,7 @@
 
 	// Settings
 	var settings = {
-		'show_alert' : true,	// Show alert message.
+		'show_alert' : true,
 		'angle' : 0,
 		'length' : 100,
 		'angle_range' : [-180, 180],
@@ -16,29 +16,30 @@
 		'onChanging' : true
 	};
 
-	// Title and version
+	// タイトルとバージョン
 	const SCRIPT_TITLE = 'ハンドルを操作する';
 	const SCRIPT_VERSION = '0.5.0';
 
-	// Document and selection
+	// ドキュメントと選択アイテム取得
 	var doc = app.activeDocument;
 	var sel = doc.selection;
 
+	// 対称アイテム取得
 	var target_path_items = get_target_items(sel, 'PathItem');
+
+	// 選択状態を取得
 	var selected_state = get_selected_state(target_path_items);
 
-	// Get the current layer
+	// プレビュー用レイヤーの設定
 	var layer_name = '_gau_script_operate_handles_preview_layer';
 	var preview_layer = sel[0].layer;
 
-
-	// パスポイントのプロトタイプ
+	// PathPointのプロトタイプ
 	function PathPoint(item, index) {
 		this.index = index;
 		this.item = item;
 		this.path_point = item.pathPoints[index];
 		this.update_both_sides_point();
-		// this.directions = [this.path_point.leftDirection, this.path_point.rightDirection];
 	};
 	PathPoint.prototype.get_both_sides_point = function(direction) {
 		if (direction !== 'left' && direction !== 'right') return false;
@@ -78,7 +79,7 @@
 	if(typeof settings.preview != 'boolean') settings.preview = false;
 	if(typeof settings.onChanging != 'boolean') settings.onChanging = false;
 
-	// Load setting from json file
+	// JSONファイルから設定を読み込む
 	var saveOptions = {
 		'os' : File.fs,
 		'jsxPath' : $.fileName,
@@ -89,7 +90,7 @@
 	saveOptions.path = get_setting_file_path(saveOptions);
 	load_settings();
 
-	// UI dialog
+	// ダイアログのプロトタイプ
 	function MainDialog() {
 		this.init();
 		return this;
@@ -122,7 +123,7 @@
 		_this.lengthText.minimumSize = [unit * 6, unit];
 		_this.lengthGroup.add('statictext', undefined, '％', {alignment:'left'});
 
-		// Dialog - Hint message
+		// Dialog - ヒントメッセージ
 		var aiv = app.version.split('.')[0];
 		if(!settings.onChanging && Number(aiv) > 16) {
 			_this.noteGroup = _this.dlg.add('panel', undefined, 'HINT:');
@@ -133,7 +134,7 @@
 			_this.noteText.minimumSize = [unit * 25, undefined];
 		}
 
-		// Dialog - オプショングループ
+		// Dialog - オプションのグループ
 		_this.optionsGroup = _this.dlg.add('panel', undefined, 'オプション:');
 		_this.optionsGroup.margins = [unit * 2, unit * 2, unit * 2, unit];
 		_this.optionsGroup.minimumSize = [310, undefined];
@@ -156,26 +157,22 @@
 			}
 		}
 
-		// Dialog - Footer group
+		// Dialog - フッターのグループ
 		_this.footerGroup = _this.dlg.add('group', undefined);
 		_this.footerGroup.margins = [unit, unit / 2, unit, unit * 0];
 		_this.footerGroup.alignment = 'center';
 		_this.footerGroup.orientation = 'row';
 
-		// Dialog - Preview checkbox
-		// _this.checkboxGroup = _this.footerGroup.add('group', undefined);
-		// _this.checkboxGroup.margins = [0, 0, unit, 0];
-
-		// _this.previewCheckbox = _this.checkboxGroup.add('checkbox', undefined, 'プレビュー');
-		// _this.previewCheckbox.value = settings.preview;
-
-		// Dialog - Buttons
+		// Dialog - 実行・キャンセルボタン
 		_this.buttonGroup = _this.footerGroup.add('group', undefined);
 
 		_this.cancel = _this.buttonGroup.add('button', undefined, 'キャンセル', {name: 'cancel'});
 		_this.ok = _this.buttonGroup.add('button', undefined, '実行', { name:'ok'});
 
-		// Preview
+		/**
+		 * プレビュー処理
+		 * @param {event} event イベント
+		 */
 		function preview(event) {
 			if(!settings.preview) return;
 			var validated_angle = validate_value(_this.angleText.text, settings.angle_range[0], settings.angle_range[1]);
@@ -195,20 +192,29 @@
 			if(_this.lengthText.text !== settings.length) _this.lengthText.text = settings.length;
 		}
 
-		// テキストフィールドの値をスライダーに反映
+		/**
+		 * テキストフィールドの値をスライダーに反映するイベントハンドラ
+		 * @param {event} event イベント
+		 */
 		function update_slider(event) {
 			var target = _this[this.parent.name + 'Slider'];
 			target.value = Math.round(this.text);
 		}
 
-		// テキストフィールドの値をスライダーに反映
+		/**
+		 * スライダーの値をテキストフィールドに反映するイベントハンドラ
+		 * @param {event} event イベント
+		 */
 		function update_value(event) {
 			var target = _this[this.parent.name + 'Text'];
 			target.text = Math.round(this.value);
 			target.dispatchEvent(new UIEvent(preview_event));
 		}
 
-		// 修飾キーと文字入力の組み合わせてプレビュー更新
+		/**
+		 * 修飾キーと文字入力の組み合わせてプレビュー更新
+		 * @param {event} event イベント
+		 */
 		function on_keyup(event) {
 			if(!settings.onChanging) {
 				if(event.keyName == 'Alt' || event.keyName == 'Meta' || event.keyName == 'Control') {
@@ -217,30 +223,23 @@
 			}
 		}
 
-		// Set event for preview
-		// _this.angleText.active = true;
+		// イベントハンドラ - テキストフィールドの更新
 		var preview_event = settings.onChanging ? 'changing' : 'change';
 		_this.angleText.addEventListener(preview_event, preview);
+		_this.angleText.addEventListener('keyup', on_keyup);
 		_this.lengthText.addEventListener(preview_event, preview);
+		_this.lengthText.addEventListener('keyup', on_keyup);
+
+		// 初回プレビュー更新
 		_this.angleText.dispatchEvent(new UIEvent(preview_event));
 
-		// テキストフィールドとスライダーを連動
+		// イベントハンドラ - テキストフィールドとスライダーを連動
 		_this.angleText.addEventListener(preview_event, update_slider);
 		_this.angleSlider.addEventListener(preview_event, update_value);
 		_this.lengthText.addEventListener(preview_event, update_slider);
 		_this.lengthSlider.addEventListener(preview_event, update_value);
 
-		// 修飾キーと文字入力の組み合わせてプレビュー更新
-		_this.angleText.addEventListener('keyup', on_keyup);
-		_this.lengthText.addEventListener('keyup', on_keyup);
-
-		// Preview checkbox action
-		// _this.previewCheckbox.onClick = function() {
-		// 	settings.preview = this.value;
-		// 	_this.angleText.dispatchEvent(new UIEvent(preview_event));
-		// }
-
-		// Button action
+		// 実行とキャンセルボタン押下のアクション
 		_this.ok.onClick = function() {
 			try {
 				var validated_angle = validate_value(_this.angleText.text, settings.angle_range[0], settings.angle_range[1]);
@@ -269,16 +268,16 @@
 		this.dlg.close();
 	};
 
+	// ダイアログのインスタンスを作成
 	var dialog = new MainDialog();
 
-	// Confirm and execute
+	// 選択状態の確認とダイアログ実行
 	if(!doc || sel.length < 1 || target_path_items.length < 1) {
 		if(settings.show_alert) alert('対象となるオブジェクトがありません');
 		return false;
 	} else {
 		dialog.showDialog();
 	}
-
 
 	/**
 	 * メインプロセス
