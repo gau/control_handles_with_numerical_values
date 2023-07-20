@@ -9,7 +9,7 @@
 		'length_range' : [0, 200],
 		'enable_segment' : false,
 		'ignore_handles' : false,
-		'not_add_handle' : false,
+		'add_handle' : true,
 		'reverse_motion' : false,
 		'is_smooth' : true,
 		'max_items' : 30,
@@ -20,7 +20,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = 'ハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.1';
+	const SCRIPT_VERSION = '0.5.2';
 
 	// PathPointのプロトタイプ
 	function PathPoint(item, index) {
@@ -147,7 +147,7 @@
 
 		var option_checkboxes = {
 			enable_segment: _this.optionsGroup.add('checkbox', undefined, '選択アンカーポイントのみ操作'),
-			not_add_handle: _this.optionsGroup.add('checkbox', undefined, '新しいハンドルを追加しない'),
+			add_handle: _this.optionsGroup.add('checkbox', undefined, '新しいハンドルを追加しない'),
 			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを破棄して新規に置き換え'),
 			reverse_motion: _this.optionsGroup.add('checkbox', undefined, '対称ハンドルの動きを反転'),
 		}
@@ -220,6 +220,26 @@
 		 * @param {event} event イベント
 		 */
 		function on_keyup(event) {
+			event.preventDefault();
+			// this.active = true;
+			// alertP(this);
+			if(event.keyName == 'Up') {
+				if(this.text < settings[this.parent.name + '_range'][1]) {
+					this.text = Number(this.text) + 1;
+					this.active = true;
+					this.dispatchEvent(new UIEvent(preview_event));
+				} else {
+					return
+				}
+			} else if(event.keyName == 'Down') {
+				if(this.text > settings[this.parent.name + '_range'][0]) {
+					this.text = Number(this.text) - 1;
+					this.active = true;
+					this.dispatchEvent(new UIEvent(preview_event));
+				} else {
+					return
+				}
+			}
 			if(!settings.onChanging) {
 				if(event.keyName == 'Alt' || event.keyName == 'Meta' || event.keyName == 'Control') {
 					_this.angleText.dispatchEvent(new UIEvent(preview_event));
@@ -338,7 +358,7 @@
 					var handle_distance = get_distance(path_point.anchor, path_point[key + 'Direction']) * length / 100;
 					var handle_radian = get_angle(path_point.anchor, path_point[key + 'Direction'], false);
 
-					if(both_sides_point === null || (settings.not_add_handle && handle_distance === 0)) continue;
+					if(both_sides_point === null || (settings.add_handle && handle_distance === 0)) continue;
 
 					var coefficient = key === 'left' ? -1 : 1;
 					var radian = get_angle(path_point.anchor, both_sides_point.anchor, false);
