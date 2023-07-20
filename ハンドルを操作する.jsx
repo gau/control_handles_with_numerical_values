@@ -8,8 +8,9 @@
 		'angle_range' : [-180, 180],
 		'length_range' : [0, 200],
 		'enable_segment' : false,
-		'ignore_handles' : false,
 		'add_handle' : true,
+		'no_edit_existing_handles' : true,
+		'ignore_handles' : false,
 		'reverse_motion' : false,
 		'is_smooth' : true,
 		'max_items' : 30,
@@ -20,7 +21,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = 'ハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.2';
+	const SCRIPT_VERSION = '0.5.3';
 
 	// PathPointのプロトタイプ
 	function PathPoint(item, index) {
@@ -148,6 +149,7 @@
 		var option_checkboxes = {
 			enable_segment: _this.optionsGroup.add('checkbox', undefined, '選択アンカーポイントのみ操作'),
 			add_handle: _this.optionsGroup.add('checkbox', undefined, '新しいハンドルを追加しない'),
+			no_edit_existing_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを変更しない'),
 			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを破棄して新規に置き換え'),
 			reverse_motion: _this.optionsGroup.add('checkbox', undefined, '対称ハンドルの動きを反転'),
 		}
@@ -358,7 +360,7 @@
 					var handle_distance = get_distance(path_point.anchor, path_point[key + 'Direction']) * length / 100;
 					var handle_radian = get_angle(path_point.anchor, path_point[key + 'Direction'], false);
 
-					if(both_sides_point === null || (settings.add_handle && handle_distance === 0)) continue;
+					if(both_sides_point === null || (settings.add_handle && handle_distance === 0) || (settings.no_edit_existing_handles && handle_distance !== 0)) continue;
 
 					var coefficient = key === 'left' ? -1 : 1;
 					var radian = get_angle(path_point.anchor, both_sides_point.anchor, false);
