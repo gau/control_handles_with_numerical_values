@@ -21,7 +21,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = 'ハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.3';
+	const SCRIPT_VERSION = '0.5.4';
 
 	// PathPointのプロトタイプ
 	function PathPoint(item, index) {
@@ -153,14 +153,19 @@
 			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを破棄して新規に置き換え'),
 			reverse_motion: _this.optionsGroup.add('checkbox', undefined, '対称ハンドルの動きを反転'),
 		}
+		function on_click_checkbox(event) {
+			settings[this.name] = this.value;
+			_this.angleText.dispatchEvent(new UIEvent(preview_event));
+			if(this.name === 'no_edit_existing_handles') {
+				option_checkboxes.ignore_handles.enabled = !this.value;
+			}
+		}
 		for(var key in option_checkboxes) {
 			option_checkboxes[key].alignment = 'left';
 			option_checkboxes[key].name = key;
 			option_checkboxes[key].value = settings[key];
-			option_checkboxes[key].onClick = function() {
-				settings[this.name] = this.value;
-				_this.angleText.dispatchEvent(new UIEvent(preview_event));
-			}
+			option_checkboxes[key].onClick = on_click_checkbox;
+			if(key === 'no_edit_existing_handles') option_checkboxes.ignore_handles.enabled = !option_checkboxes[key].value;
 		}
 
 		// Dialog - フッターのグループ
