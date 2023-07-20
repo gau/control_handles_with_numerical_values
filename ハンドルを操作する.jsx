@@ -9,7 +9,7 @@
 		'length_range' : [0, 200],
 		'enable_segment' : false,
 		'add_handle' : true,
-		'no_edit_existing_handles' : true,
+		'no_edit_existing_handles' : false,
 		'ignore_handles' : false,
 		'reverse_motion' : false,
 		'is_smooth' : true,
