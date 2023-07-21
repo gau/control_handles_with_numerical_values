@@ -21,7 +21,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = 'ハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.6';
+	const SCRIPT_VERSION = '0.5.7';
 
 	// プレビュー用レイヤーの設定
 	const LAYER_NAME = '_gau_script_operate_handles_preview_layer';
@@ -104,17 +104,20 @@
 		_this.optionsGroup.orientation = 'column';
 
 		_this.option_checkboxes = {
-			enable_segment: _this.optionsGroup.add('checkbox', undefined, '選択アンカーポイントのみを対象'),
-			no_edit_existing_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを動かさない'),
+			enable_segment: _this.optionsGroup.add('checkbox', undefined, '選択アンカーポイントのハンドルだけ操作'),
+			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルをすべて新規に置き換え'),
 			existing_handles_only: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルのみ操作'),
-			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルをすべてリセットして新しくする'),
-			reverse_motion: _this.optionsGroup.add('checkbox', undefined, '対称ハンドルの動きを反転'),
+			no_edit_existing_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを動かさない'),
+			reverse_motion: _this.optionsGroup.add('checkbox', undefined, '隣り合うハンドルの動きを反転'),
 		}
 		function on_click_checkbox(event) {
 			settings[this.name] = this.value;
 			_this.angleText.dispatchEvent(new UIEvent(preview_event));
 			if(this.name === 'existing_handles_only') {
-				_this.option_checkboxes.ignore_handles.enabled = this.value;
+				var target = _this.option_checkboxes.no_edit_existing_handles;
+				target.enabled = !this.value;
+				if(!target.enabled) target.value = false;
+				_this.angleText.dispatchEvent(new UIEvent(preview_event));
 			}
 		}
 		for(var key in _this.option_checkboxes) {
@@ -122,7 +125,12 @@
 			_this.option_checkboxes[key].name = key;
 			_this.option_checkboxes[key].value = settings[key];
 			_this.option_checkboxes[key].onClick = on_click_checkbox;
-			if(key === 'existing_handles_only') _this.option_checkboxes.ignore_handles.enabled = _this.option_checkboxes[key].value;
+			if(key === 'existing_handles_only') {
+				var target = _this.option_checkboxes.no_edit_existing_handles;
+				target.enabled = !_this.option_checkboxes[key].value;
+				if(!target.enabled) target.value = false;
+				_this.angleText.dispatchEvent(new UIEvent(preview_event));
+			}
 		}
 
 		// Dialog - フッターのグループ
@@ -331,7 +339,7 @@
 				preview_layer.name = LAYER_NAME;
 				preview_layer.zOrder(ZOrderMethod.BRINGTOFRONT);
 			} catch (error) {
-				preview_layer = sel[0].layer;
+				preview_layer = target_path_items[0].layer;
 			}
 		}
 
@@ -346,11 +354,12 @@
 				for (var key in point.both_sides_points) {
 
 					var both_sides_point = point.both_sides_points[key];
+					var target_direction = path_point[key + 'Direction'];
 
-					var handle_distance = get_distance(path_point.anchor, path_point[key + 'Direction']) * length / 100;
-					var handle_radian = get_angle(path_point.anchor, path_point[key + 'Direction'], false);
+					var handle_distance = get_distance(path_point.anchor, target_direction) * length / 100;
+					var handle_radian = get_angle(path_point.anchor, target_direction, false);
 
-					if(both_sides_point === null || (settings.existing_handles_only && handle_distance === 0) || (settings.no_edit_existing_handles && handle_distance !== 0)) continue;
+					if(both_sides_point === null || (settings.existing_handles_only && get_distance(path_point.anchor, target_direction) === 0) || (settings.no_edit_existing_handles && handle_distance !== 0)) continue;
 
 					var coefficient = key === 'left' ? -1 : 1;
 					var radian = get_angle(path_point.anchor, both_sides_point.anchor, false);
