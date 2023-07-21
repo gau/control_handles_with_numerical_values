@@ -21,7 +21,10 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = 'ハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.5';
+	const SCRIPT_VERSION = '0.5.6';
+
+	// プレビュー用レイヤーの設定
+	const LAYER_NAME = '_gau_script_operate_handles_preview_layer';
 
 	// PathPointのプロトタイプ
 	function PathPoint(item, index) {
@@ -77,9 +80,7 @@
 		target_points.push(get_target_points(target_path_items[i]));
 	}
 
-	// プレビュー用レイヤーの設定
-	var layer_name = '_gau_script_operate_handles_preview_layer';
-	var preview_layer = sel[0].layer;
+	var preview_layer;
 
 	if(typeof settings.preview != 'boolean') settings.preview = false;
 	if(typeof settings.onChanging != 'boolean') settings.onChanging = false;
@@ -337,16 +338,17 @@
 	 * @param {boolean} is_preview プレビューモードかどうか
 	 */
 	function mainProcess(angle, length, is_preview) {
-	// alert(target_points.length);
+
 		if(!length) length = 0;
 		var offset_angle = (angle > 180 ? 180 : angle) * Math.PI / 180;
 
 		if(is_preview) {
 			try {
 				preview_layer = doc.layers.add();
-				preview_layer.name = layer_name;
+				preview_layer.name = LAYER_NAME;
 				preview_layer.zOrder(ZOrderMethod.BRINGTOFRONT);
 			} catch (error) {
+				preview_layer = sel[0].layer;
 			}
 		}
 
