@@ -63,39 +63,6 @@
 		}
 	};
 
-	// ドキュメントと選択アイテム取得
-	var doc = app.activeDocument;
-	var sel = doc.selection;
-
-	// 対称アイテム取得
-	var target_path_items = get_target_items(sel, 'PathItem');
-
-	// 選択状態を取得
-	var selected_state = get_selected_state(target_path_items);
-
-	// 対称のポイントを取得
-	var target_points = [];
-	var target_points_length = 0;
-	for (var i = 0; i < target_path_items.length; i++) {
-		target_points.push(get_target_points(target_path_items[i]));
-	}
-
-	var preview_layer;
-
-	if(typeof settings.preview != 'boolean') settings.preview = false;
-	if(typeof settings.onChanging != 'boolean') settings.onChanging = false;
-
-	// JSONファイルから設定を読み込む
-	var saveOptions = {
-		'os' : File.fs,
-		'jsxPath' : $.fileName,
-		'reverseDomain' : 'com.graphicartsunit',
-		'fileName' : 'operate_handles.json',
-		'path' : ''
-	};
-	saveOptions.path = get_setting_file_path(saveOptions);
-	load_settings();
-
 	// ダイアログのプロトタイプ
 	function MainDialog() {
 		this.init();
@@ -128,17 +95,6 @@
 		_this.lengthText = _this.lengthGroup.add('edittext', undefined, settings.length);
 		_this.lengthText.minimumSize = [unit * 6, unit];
 		_this.lengthGroup.add('statictext', undefined, '％', {alignment:'left'});
-
-		// Dialog - ヒントメッセージ
-		var aiv = app.version.split('.')[0];
-		if(!settings.onChanging && Number(aiv) > 16) {
-			_this.noteGroup = _this.dlg.add('panel', undefined, 'HINT:');
-
-			var noteText = saveOptions.os == 'Windows' ? '［Alt］、［Ctrl］' : '［command］［option］［control］';
-			_this.noteText = _this.noteGroup.add('statictext', undefined, 'CC以降は' + noteText + 'のいずれかを押してもプレビューを更新できます', {multiline:true});
-			_this.noteText.alignment = 'center';
-			_this.noteText.minimumSize = [unit * 25, undefined];
-		}
 
 		// Dialog - オプションのグループ
 		_this.optionsGroup = _this.dlg.add('panel', undefined, 'オプション:');
@@ -307,33 +263,55 @@
 		this.dlg.close();
 	};
 
+	// ドキュメントと選択アイテム取得
+	var doc = app.activeDocument;
+	var sel = doc.selection;
+
+	// 対称アイテム取得
+	var target_path_items = get_target_items(sel, 'PathItem');
+
+	// 選択状態を取得
+	var selected_state = get_selected_state(target_path_items);
+
+	// 対称のポイントを取得
+	var target_points = [];
+	var target_points_length = 0;
+	for (var i = 0; i < target_path_items.length; i++) {
+		target_points.push(get_target_points(target_path_items[i]));
+	}
+
+	var preview_layer;
+
+	if(typeof settings.preview != 'boolean') settings.preview = false;
+	if(typeof settings.onChanging != 'boolean') settings.onChanging = false;
+
+	// JSONファイルから設定を読み込む
+	var save_options = {
+		'os' : File.fs,
+		'jsxPath' : $.fileName,
+		'reverseDomain' : 'com.graphicartsunit',
+		'fileName' : 'operate_handles.json',
+		'path' : ''
+	};
+	save_options.path = get_setting_file_path(save_options);
+	load_settings();
+
 	// 選択状態の確認とダイアログ実行
+	var has_error = true;
 	if (!doc || sel.length < 1 || target_path_items.length < 1) {
 		if(settings.show_alert) alert('対象となるオブジェクトがありません');
-		return false;
 	} else if (target_path_items.length > settings.max_items) {
-		var conf = true;
 		if(settings.show_alert) {
-			conf = confirm('対象のオブジェクトが' + target_path_items.length + 'あります。動作が重くなったりクラッシュの原因となるため、一度に処理するオブジェクトは' + settings.max_items + '以下にしておくことをお勧めします。続けますか？');
-		}
-		if(conf) {
-			var dialog = new MainDialog();
-			dialog.showDialog();
-		} else {
-			return false;
+			has_error = confirm('対象のオブジェクトが ' + target_path_items.length + ' あります。動作が重くなったりクラッシュの原因となるため、一度に処理するオブジェクトは ' + settings.max_items + ' 以下にしておくことをお勧めします。続けますか？');
 		}
 	} else if (target_points_length > settings.max_points) {
-		var conf = true;
 		if(settings.show_alert) {
-			conf = confirm('対象のアンカーポイントが' + target_points_length + 'あります。動作が重くなったりクラッシュの原因となるため、一度に処理するアンカーポイントは'+ settings.max_points + '以下にしておくことをお勧めします。続けますか？');
-		}
-		if(conf) {
-			var dialog = new MainDialog();
-			dialog.showDialog();
-		} else {
-			return false;
+			has_error = confirm('対象のアンカーポイントが ' + target_points_length + ' あります。動作が重くなったりクラッシュの原因となるため、一度に処理するアンカーポイントは '+ settings.max_points + ' 以下にしておくことをお勧めします。続けますか？');
 		}
 	} else {
+		has_error = false;
+	}
+	if(!has_error) {
 		var dialog = new MainDialog();
 		dialog.showDialog();
 	}
@@ -680,18 +658,18 @@
 	 * JSONファイルから設定を読み込む
 	 */
 	function load_settings() {
-		var dir = saveOptions.path.match(/(.*)(\/)/)[1];
+		var dir = save_options.path.match(/(.*)(\/)/)[1];
 		if(!new Folder(dir).exists) {
 			new Folder(dir).create();
-		} else if(new File(saveOptions.path).exists) {
-			var settingFile = new File(saveOptions.path);
-			settingFile.encoding = 'UTF-8';
-			settingFile.open('r');
-			var loadedSettings = settingFile.readln();
-			loadedSettings = (new Function('return' + loadedSettings))();
-			settingFile.close();
-			loadedSettings.onChanging = settings.onChanging;
-			settings = loadedSettings;
+		} else if(new File(save_options.path).exists) {
+			var setting_file = new File(save_options.path);
+			setting_file.encoding = 'UTF-8';
+			setting_file.open('r');
+			var loaded_settings = setting_file.readln();
+			loaded_settings = (new Function('return' + loaded_settings))();
+			setting_file.close();
+			loaded_settings.onChanging = settings.onChanging;
+			settings = loaded_settings;
 		}
 	}
 
@@ -699,10 +677,10 @@
 	 * 設定をJSONファイルで保存する
 	 */
 	function save_settings() {
-		var settingFile = new File(saveOptions.path);
-		settingFile.open('w');
-		settingFile.write(settings.toSource());
-		settingFile.close();
+		var setting_file = new File(save_options.path);
+		setting_file.open('w');
+		setting_file.write(settings.toSource());
+		setting_file.close();
 	}
 
 }());
