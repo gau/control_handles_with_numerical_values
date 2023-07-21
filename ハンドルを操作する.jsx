@@ -147,7 +147,7 @@
 		_this.optionsGroup.alignment = 'center';
 		_this.optionsGroup.orientation = 'column';
 
-		var option_checkboxes = {
+		_this.option_checkboxes = {
 			enable_segment: _this.optionsGroup.add('checkbox', undefined, '選択アンカーポイントのみを対象'),
 			no_edit_existing_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを動かさない'),
 			existing_handles_only: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルのみ操作'),
@@ -158,15 +158,15 @@
 			settings[this.name] = this.value;
 			_this.angleText.dispatchEvent(new UIEvent(preview_event));
 			if(this.name === 'existing_handles_only') {
-				option_checkboxes.ignore_handles.enabled = this.value;
+				_this.option_checkboxes.ignore_handles.enabled = this.value;
 			}
 		}
-		for(var key in option_checkboxes) {
-			option_checkboxes[key].alignment = 'left';
-			option_checkboxes[key].name = key;
-			option_checkboxes[key].value = settings[key];
-			option_checkboxes[key].onClick = on_click_checkbox;
-			if(key === 'existing_handles_only') option_checkboxes.ignore_handles.enabled = option_checkboxes[key].value;
+		for(var key in _this.option_checkboxes) {
+			_this.option_checkboxes[key].alignment = 'left';
+			_this.option_checkboxes[key].name = key;
+			_this.option_checkboxes[key].value = settings[key];
+			_this.option_checkboxes[key].onClick = on_click_checkbox;
+			if(key === 'existing_handles_only') _this.option_checkboxes.ignore_handles.enabled = _this.option_checkboxes[key].value;
 		}
 
 		// Dialog - フッターのグループ
@@ -190,9 +190,8 @@
 			var validated_angle = validate_value(_this.angleText.text, settings.angle_range[0], settings.angle_range[1]);
 			var validated_langth = validate_value(_this.lengthText.text, settings.length_range[0], settings.length_range[1]);
 			if(validated_angle != -1 && !isNaN(validated_angle) && validated_langth != -1 && !isNaN(validated_langth)) {
-				settings.angle = validated_angle;
-				settings.length = validated_langth;
-				mainProcess(validated_angle, validated_langth, true);
+				_this.updateSettings();
+				mainProcess(true);
 				var dummyObject = doc.pathItems.add();
 				dummyObject.remove();
 				app.redraw();
@@ -277,9 +276,8 @@
 				var validated_angle = validate_value(_this.angleText.text, settings.angle_range[0], settings.angle_range[1]);
 				var validated_length = validate_value(_this.lengthText.text, settings.length_range[0], settings.length_range[1]);
 				if(validated_angle != -1 && !isNaN(validated_angle) && validated_length != -1 && !isNaN(validated_length)) {
-					settings.angle = validated_angle;
-					settings.length = validated_length;
-					mainProcess(validated_angle, validated_length, false);
+					_this.updateSettings();
+					mainProcess(false);
 					save_settings();
 					_this.closeDialog();
 				} else {
@@ -292,6 +290,15 @@
 		_this.cancel.onClick = function() {
 			_this.closeDialog();
 		}
+	};
+	MainDialog.prototype.updateSettings = function() {
+		settings.angle = this.angleText.text;
+		settings.length = this.lengthText.text;
+		settings.enable_segment = this.option_checkboxes.enable_segment.value;
+		settings.existing_handles_only = this.option_checkboxes.existing_handles_only.value;
+		settings.no_edit_existing_handles = this.option_checkboxes.no_edit_existing_handles.value;
+		settings.ignore_handles = this.option_checkboxes.ignore_handles.value;
+		settings.reverse_motion = this.option_checkboxes.reverse_motion.value;
 	};
 	MainDialog.prototype.showDialog = function() {
 		this.dlg.show();
@@ -333,14 +340,12 @@
 
 	/**
 	 * メインプロセス
-	 * @param {number} angle 角度
-	 * @param {number} length 倍率
 	 * @param {boolean} is_preview プレビューモードかどうか
 	 */
-	function mainProcess(angle, length, is_preview) {
+	function mainProcess(is_preview) {
 
-		if(!length) length = 0;
-		var offset_angle = (angle > 180 ? 180 : angle) * Math.PI / 180;
+		var length = !settings.length ? 0 : settings.length;
+		var offset_angle = settings.angle * Math.PI / 180;
 
 		if(is_preview) {
 			try {
