@@ -4,11 +4,11 @@
 	var settings = {
 		'show_alert' : true,
 		'angle' : 0,
-		'length' : 100,
+		'length' : 50,
 		'angle_range' : [-180, 180],
 		'length_range' : [0, 200],
 		'enable_segment' : false,
-		'add_handle' : true,
+		'existing_handles_only' : false,
 		'no_edit_existing_handles' : false,
 		'ignore_handles' : false,
 		'reverse_motion' : false,
@@ -21,7 +21,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = 'ハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.4';
+	const SCRIPT_VERSION = '0.5.5';
 
 	// PathPointのプロトタイプ
 	function PathPoint(item, index) {
@@ -147,17 +147,17 @@
 		_this.optionsGroup.orientation = 'column';
 
 		var option_checkboxes = {
-			enable_segment: _this.optionsGroup.add('checkbox', undefined, '選択アンカーポイントのみ操作'),
-			add_handle: _this.optionsGroup.add('checkbox', undefined, '新しいハンドルを追加しない'),
-			no_edit_existing_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを変更しない'),
-			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを破棄して新規に置き換え'),
+			enable_segment: _this.optionsGroup.add('checkbox', undefined, '選択アンカーポイントのみを対象'),
+			no_edit_existing_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを動かさない'),
+			existing_handles_only: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルのみ操作'),
+			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルをすべてリセットして新しくする'),
 			reverse_motion: _this.optionsGroup.add('checkbox', undefined, '対称ハンドルの動きを反転'),
 		}
 		function on_click_checkbox(event) {
 			settings[this.name] = this.value;
 			_this.angleText.dispatchEvent(new UIEvent(preview_event));
-			if(this.name === 'no_edit_existing_handles') {
-				option_checkboxes.ignore_handles.enabled = !this.value;
+			if(this.name === 'existing_handles_only') {
+				option_checkboxes.ignore_handles.enabled = this.value;
 			}
 		}
 		for(var key in option_checkboxes) {
@@ -165,7 +165,7 @@
 			option_checkboxes[key].name = key;
 			option_checkboxes[key].value = settings[key];
 			option_checkboxes[key].onClick = on_click_checkbox;
-			if(key === 'no_edit_existing_handles') option_checkboxes.ignore_handles.enabled = !option_checkboxes[key].value;
+			if(key === 'existing_handles_only') option_checkboxes.ignore_handles.enabled = option_checkboxes[key].value;
 		}
 
 		// Dialog - フッターのグループ
@@ -365,7 +365,7 @@
 					var handle_distance = get_distance(path_point.anchor, path_point[key + 'Direction']) * length / 100;
 					var handle_radian = get_angle(path_point.anchor, path_point[key + 'Direction'], false);
 
-					if(both_sides_point === null || (settings.add_handle && handle_distance === 0) || (settings.no_edit_existing_handles && handle_distance !== 0)) continue;
+					if(both_sides_point === null || (settings.existing_handles_only && handle_distance === 0) || (settings.no_edit_existing_handles && handle_distance !== 0)) continue;
 
 					var coefficient = key === 'left' ? -1 : 1;
 					var radian = get_angle(path_point.anchor, both_sides_point.anchor, false);
