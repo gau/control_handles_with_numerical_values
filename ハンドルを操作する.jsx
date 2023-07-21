@@ -7,10 +7,10 @@
 		'length' : 50,
 		'angle_range' : [-180, 180],
 		'length_range' : [0, 200],
-		'enable_segment' : false,
+		'enable_segments' : false,
 		'existing_handles_only' : false,
-		'no_edit_existing_handles' : false,
-		'ignore_handles' : false,
+		'existing_handles_no_operate' : false,
+		'ignore_handles' : true,
 		'reverse_motion' : false,
 		'is_smooth' : true,
 		'max_items' : 30,
@@ -48,7 +48,7 @@
 		} else {
 			both_sides_point = both_sides_index < 0 || both_sides_index > point_length - 1 ? null : this.item.pathPoints[both_sides_index];
 		}
-		if(!settings.enable_segment) {
+		if(!settings.enable_segments) {
 			if(this.path_point.selected === PathPointSelection.RIGHTDIRECTION && direction === 'left') both_sides_point = null;
 			if(this.path_point.selected === PathPointSelection.LEFTDIRECTION && direction === 'right') both_sides_point = null;
 		} else {
@@ -104,17 +104,17 @@
 		_this.optionsGroup.orientation = 'column';
 
 		_this.option_checkboxes = {
-			enable_segment: _this.optionsGroup.add('checkbox', undefined, '選択アンカーポイントのハンドルだけ操作'),
 			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルをすべて新規に置き換え'),
 			existing_handles_only: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルのみ操作'),
-			no_edit_existing_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを動かさない'),
+			existing_handles_no_operate: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを操作しない'),
+			enable_segments: _this.optionsGroup.add('checkbox', undefined, '選択されたアンカーポイントのハンドルだけ操作'),
 			reverse_motion: _this.optionsGroup.add('checkbox', undefined, '隣り合うハンドルの動きを反転'),
 		}
 		function on_click_checkbox(event) {
 			settings[this.name] = this.value;
 			_this.angleText.dispatchEvent(new UIEvent(preview_event));
 			if(this.name === 'existing_handles_only') {
-				var target = _this.option_checkboxes.no_edit_existing_handles;
+				var target = _this.option_checkboxes.existing_handles_no_operate;
 				target.enabled = !this.value;
 				if(!target.enabled) target.value = false;
 				_this.angleText.dispatchEvent(new UIEvent(preview_event));
@@ -126,7 +126,7 @@
 			_this.option_checkboxes[key].value = settings[key];
 			_this.option_checkboxes[key].onClick = on_click_checkbox;
 			if(key === 'existing_handles_only') {
-				var target = _this.option_checkboxes.no_edit_existing_handles;
+				var target = _this.option_checkboxes.existing_handles_no_operate;
 				target.enabled = !_this.option_checkboxes[key].value;
 				if(!target.enabled) target.value = false;
 				_this.angleText.dispatchEvent(new UIEvent(preview_event));
@@ -258,9 +258,9 @@
 	MainDialog.prototype.updateSettings = function() {
 		settings.angle = this.angleText.text;
 		settings.length = this.lengthText.text;
-		settings.enable_segment = this.option_checkboxes.enable_segment.value;
+		settings.enable_segments = this.option_checkboxes.enable_segments.value;
 		settings.existing_handles_only = this.option_checkboxes.existing_handles_only.value;
-		settings.no_edit_existing_handles = this.option_checkboxes.no_edit_existing_handles.value;
+		settings.existing_handles_no_operate = this.option_checkboxes.existing_handles_no_operate.value;
 		settings.ignore_handles = this.option_checkboxes.ignore_handles.value;
 		settings.reverse_motion = this.option_checkboxes.reverse_motion.value;
 	};
@@ -359,7 +359,7 @@
 					var handle_distance = get_distance(path_point.anchor, target_direction) * length / 100;
 					var handle_radian = get_angle(path_point.anchor, target_direction, false);
 
-					if(both_sides_point === null || (settings.existing_handles_only && get_distance(path_point.anchor, target_direction) === 0) || (settings.no_edit_existing_handles && handle_distance !== 0)) continue;
+					if(both_sides_point === null || (settings.existing_handles_only && get_distance(path_point.anchor, target_direction) === 0) || (settings.existing_handles_no_operate && handle_distance !== 0)) continue;
 
 					var coefficient = key === 'left' ? -1 : 1;
 					var radian = get_angle(path_point.anchor, both_sides_point.anchor, false);
