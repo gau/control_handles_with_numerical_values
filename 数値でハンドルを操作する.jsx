@@ -9,7 +9,7 @@
 		'length_range' : [0, 200],
 		'enable_segments' : false,
 		'existing_handles_only' : false,
-		'existing_handles_no_operate' : false,
+		'existing_handles_no_control' : false,
 		'ignore_handles' : true,
 		'reverse_motion' : false,
 		'is_smooth' : true,
@@ -24,7 +24,7 @@
 	const SCRIPT_VERSION = '0.5.7';
 
 	// プレビュー用レイヤーの設定
-	const LAYER_NAME = '_gau_script_operate_handles_preview_layer';
+	const LAYER_NAME = '_gau_script_control_handles_with_numerical_values_preview_layer';
 
 	// PathPointのプロトタイプ
 	function PathPoint(item, index) {
@@ -106,7 +106,7 @@
 		_this.option_checkboxes = {
 			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルをすべて新規に置き換え'),
 			existing_handles_only: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルのみ操作'),
-			existing_handles_no_operate: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを操作しない'),
+			existing_handles_no_control: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを変更しない'),
 			enable_segments: _this.optionsGroup.add('checkbox', undefined, '選択されたアンカーポイントのハンドルだけ操作'),
 			reverse_motion: _this.optionsGroup.add('checkbox', undefined, '隣り合うハンドルの動きを反転'),
 		}
@@ -114,7 +114,7 @@
 			settings[this.name] = this.value;
 			_this.angleText.dispatchEvent(new UIEvent(preview_event));
 			if(this.name === 'existing_handles_only') {
-				var target = _this.option_checkboxes.existing_handles_no_operate;
+				var target = _this.option_checkboxes.existing_handles_no_control;
 				target.enabled = !this.value;
 				if(!target.enabled) target.value = false;
 				_this.angleText.dispatchEvent(new UIEvent(preview_event));
@@ -126,7 +126,7 @@
 			_this.option_checkboxes[key].value = settings[key];
 			_this.option_checkboxes[key].onClick = on_click_checkbox;
 			if(key === 'existing_handles_only') {
-				var target = _this.option_checkboxes.existing_handles_no_operate;
+				var target = _this.option_checkboxes.existing_handles_no_control;
 				target.enabled = !_this.option_checkboxes[key].value;
 				if(!target.enabled) target.value = false;
 				_this.angleText.dispatchEvent(new UIEvent(preview_event));
@@ -260,7 +260,7 @@
 		settings.length = this.lengthText.text;
 		settings.enable_segments = this.option_checkboxes.enable_segments.value;
 		settings.existing_handles_only = this.option_checkboxes.existing_handles_only.value;
-		settings.existing_handles_no_operate = this.option_checkboxes.existing_handles_no_operate.value;
+		settings.existing_handles_no_control = this.option_checkboxes.existing_handles_no_control.value;
 		settings.ignore_handles = this.option_checkboxes.ignore_handles.value;
 		settings.reverse_motion = this.option_checkboxes.reverse_motion.value;
 	};
@@ -298,7 +298,7 @@
 		'os' : File.fs,
 		'jsxPath' : $.fileName,
 		'reverseDomain' : 'com.graphicartsunit',
-		'fileName' : 'operate_handles.json',
+		'fileName' : 'control_handles_with_numerical_values.json',
 		'path' : ''
 	};
 	save_options.path = get_setting_file_path(save_options);
@@ -359,7 +359,7 @@
 					var handle_distance = get_distance(path_point.anchor, target_direction) * length / 100;
 					var handle_radian = get_angle(path_point.anchor, target_direction, false);
 
-					if(both_sides_point === null || (settings.existing_handles_only && get_distance(path_point.anchor, target_direction) === 0) || (settings.existing_handles_no_operate && handle_distance !== 0)) continue;
+					if(both_sides_point === null || (settings.existing_handles_only && get_distance(path_point.anchor, target_direction) === 0) || (settings.existing_handles_no_control && handle_distance !== 0)) continue;
 
 					var coefficient = key === 'left' ? -1 : 1;
 					var radian = get_angle(path_point.anchor, both_sides_point.anchor, false);
