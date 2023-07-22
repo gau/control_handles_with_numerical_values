@@ -20,8 +20,8 @@
 	};
 
 	// タイトルとバージョン
-	const SCRIPT_TITLE = 'ハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.7';
+	const SCRIPT_TITLE = '数値でハンドルを操作する';
+	const SCRIPT_VERSION = '0.5.8';
 
 	// プレビュー用レイヤーの設定
 	const LAYER_NAME = '_gau_script_control_handles_with_numerical_values_preview_layer';
