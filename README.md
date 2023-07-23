@@ -17,7 +17,7 @@
 
 ## 検証バージョン
 
-* Illustrator 2023
+* Illustrator 2019〜2023
 
 ## インストール方法
 
