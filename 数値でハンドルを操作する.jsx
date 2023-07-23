@@ -21,10 +21,11 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = '数値でハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.8';
+	const SCRIPT_VERSION = '0.5.9';
 
 	// プレビュー用レイヤーの設定
 	const LAYER_NAME = '_gau_script_control_handles_with_numerical_values_preview_layer';
+	const WITH_ALT_KEY = ScriptUI.environment.keyboardState.altKey;
 
 	// PathPointのプロトタイプ
 	function PathPoint(item, index) {
@@ -301,8 +302,11 @@
 		'fileName' : 'control_handles_with_numerical_values.json',
 		'path' : ''
 	};
+
 	save_options.path = get_setting_file_path(save_options);
-	load_settings();
+	if(!ScriptUI.environment.keyboardState.altKey) {
+		load_settings();
+	}
 
 	// 選択状態の確認とダイアログ実行
 	var has_error = true;
