@@ -21,7 +21,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = '数値でハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.10';
+	const SCRIPT_VERSION = '0.5.11';
 
 	// プレビュー用レイヤーの設定
 	const LAYER_NAME = '_gau_script_control_handles_with_numerical_values_preview_layer';
@@ -317,21 +317,21 @@
 	}
 
 	// 選択状態の確認とダイアログ実行
-	var has_error = true;
+	var no_error = false;
 	if (!doc || sel.length < 1 || target_path_items.length < 1) {
 		if(settings.show_alert) alert('対象となるオブジェクトがありません');
 	} else if (target_path_items.length > settings.max_items) {
 		if(settings.show_alert) {
-			has_error = confirm('対象のオブジェクトが ' + target_path_items.length + ' あります。動作が重くなったりクラッシュの原因となるため、一度に処理するオブジェクトは ' + settings.max_items + ' 以下にしておくことをお勧めします。続けますか？');
+			no_error = confirm('対象のオブジェクトが ' + target_path_items.length + ' あります。動作が重くなったりクラッシュの原因となるため、一度に処理するオブジェクトは ' + settings.max_items + ' 以下にしておくことをお勧めします。続けますか？');
 		}
 	} else if (target_points_length > settings.max_points) {
 		if(settings.show_alert) {
-			has_error = confirm('対象のアンカーポイントが ' + target_points_length + ' あります。動作が重くなったりクラッシュの原因となるため、一度に処理するアンカーポイントは '+ settings.max_points + ' 以下にしておくことをお勧めします。続けますか？');
+			no_error = confirm('対象のアンカーポイントが ' + target_points_length + ' あります。動作が重くなったりクラッシュの原因となるため、一度に処理するアンカーポイントは '+ settings.max_points + ' 以下にしておくことをお勧めします。続けますか？');
 		}
 	} else {
-		has_error = false;
+		no_error = true;
 	}
-	if(!has_error) {
+	if(no_error) {
 		var dialog = new MainDialog();
 		dialog.showDialog();
 	}
