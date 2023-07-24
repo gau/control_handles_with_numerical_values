@@ -10,7 +10,7 @@
 		'enable_segments' : false,
 		'existing_handles_only' : false,
 		'existing_handles_no_control' : false,
-		'ignore_handles' : true,
+		'new_handles' : true,
 		'reverse_motion' : false,
 		'is_smooth' : true,
 		'max_items' : 30,
@@ -21,7 +21,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = '数値でハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.9';
+	const SCRIPT_VERSION = '0.5.10';
 
 	// プレビュー用レイヤーの設定
 	const LAYER_NAME = '_gau_script_control_handles_with_numerical_values_preview_layer';
@@ -105,7 +105,7 @@
 		_this.optionsGroup.orientation = 'column';
 
 		_this.option_checkboxes = {
-			ignore_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルをすべて新規に置き換え'),
+			new_handles: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルをすべて新規に置き換え'),
 			existing_handles_only: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルのみ操作'),
 			existing_handles_no_control: _this.optionsGroup.add('checkbox', undefined, '既存のハンドルを変更しない'),
 			enable_segments: _this.optionsGroup.add('checkbox', undefined, '選択されたアンカーポイントのハンドルだけ操作'),
@@ -243,7 +243,7 @@
 				if(validated_angle != -1 && !isNaN(validated_angle) && validated_length != -1 && !isNaN(validated_length)) {
 					_this.updateSettings();
 					mainProcess(false);
-					save_settings();
+					if(!WITH_ALT_KEY) save_settings();
 					_this.closeDialog();
 				} else {
 					_this.angleText.text = settings.angle;
@@ -262,7 +262,7 @@
 		settings.enable_segments = this.option_checkboxes.enable_segments.value;
 		settings.existing_handles_only = this.option_checkboxes.existing_handles_only.value;
 		settings.existing_handles_no_control = this.option_checkboxes.existing_handles_no_control.value;
-		settings.ignore_handles = this.option_checkboxes.ignore_handles.value;
+		settings.new_handles = this.option_checkboxes.new_handles.value;
 		settings.reverse_motion = this.option_checkboxes.reverse_motion.value;
 	};
 	MainDialog.prototype.showDialog = function() {
@@ -304,7 +304,15 @@
 	};
 
 	save_options.path = get_setting_file_path(save_options);
-	if(!ScriptUI.environment.keyboardState.altKey) {
+	if(WITH_ALT_KEY) {
+		settings.angle = 0;
+		settings.length = 100;
+		settings.enable_segments = false;
+		settings.existing_handles_only = true;
+		settings.existing_handles_no_control = false;
+		settings.new_handles = false;
+		settings.reverse_motion = false;
+	} else {
 		load_settings();
 	}
 
@@ -368,7 +376,7 @@
 					var coefficient = key === 'left' ? -1 : 1;
 					var radian = get_angle(path_point.anchor, both_sides_point.anchor, false);
 					var distance = get_distance(path_point.anchor, both_sides_point.anchor) * length / 100;
-					if(!settings.ignore_handles) {
+					if(!settings.new_handles) {
 						radian = handle_distance !== 0 ? handle_radian : radian;
 						distance = handle_distance !== 0 ? handle_distance : distance;
 					}
