@@ -25,6 +25,8 @@
 
 	// プレビュー用レイヤーの設定
 	const LAYER_NAME = '_gau_script_control_handles_with_numerical_values_preview_layer';
+
+	// Altキーの検出
 	const WITH_ALT_KEY = ScriptUI.environment.keyboardState.altKey;
 
 	// PathPointのプロトタイプ
@@ -188,13 +190,11 @@
 		}
 
 		/**
-		 * 修飾キーと文字入力の組み合わせてプレビュー更新
+		 * テキストフィールドでのキー入力処理
 		 * @param {event} event イベント
 		 */
 		function on_keyup(event) {
 			event.preventDefault();
-			// this.active = true;
-			// alertP(this);
 			if(event.keyName == 'Up') {
 				if(this.text < settings[this.parent.name + '_range'][1]) {
 					this.text = Number(this.text) + 1;
@@ -212,6 +212,7 @@
 					return
 				}
 			}
+			// 修飾キーと文字入力の組み合わせてプレビュー更新
 			if(!settings.onChanging) {
 				if(event.keyName == 'Alt' || event.keyName == 'Meta' || event.keyName == 'Control') {
 					_this.angleText.dispatchEvent(new UIEvent(preview_event));
@@ -289,10 +290,8 @@
 		target_points.push(get_target_points(target_path_items[i]));
 	}
 
+	// プレビューレイヤー用変数
 	var preview_layer;
-
-	if(typeof settings.preview != 'boolean') settings.preview = false;
-	if(typeof settings.onChanging != 'boolean') settings.onChanging = false;
 
 	// JSONファイルから設定を読み込む
 	var save_options = {
