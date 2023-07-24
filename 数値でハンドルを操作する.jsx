@@ -21,7 +21,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = '数値でハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.11';
+	const SCRIPT_VERSION = '0.5.12';
 
 	// プレビュー用レイヤーの設定
 	const LAYER_NAME = '_gau_script_control_handles_with_numerical_values_preview_layer';
@@ -280,6 +280,9 @@
 	// 対称アイテム取得
 	var target_path_items = get_target_items(sel, 'PathItem');
 
+	// テキストパスを連結
+	target_path_items = target_path_items.concat(get_selected_text_path());
+
 	// 選択状態を取得
 	var selected_state = get_selected_state(target_path_items);
 
@@ -317,7 +320,7 @@
 
 	// 選択状態の確認とダイアログ実行
 	var no_error = false;
-	if (!doc || sel.length < 1 || target_path_items.length < 1) {
+	if (!doc || target_path_items.length < 1) {
 		if(settings.show_alert) alert('対象となるオブジェクトがありません');
 	} else if (target_path_items.length > settings.max_items) {
 		if(settings.show_alert) {
@@ -412,6 +415,8 @@
 		for(var i = 0; i < selection.length; i++) {
 			if(selection[i].typename === typename) {
 				items.push(selection[i]);
+			} else if(selection[i].typename === 'CompoundPathItem') {
+				items = items.concat(get_target_items(selection[i].pathItems, typename));
 			} else if(selection[i].typename === 'GroupItem') {
 				items = items.concat(get_target_items(selection[i].pageItems, typename));
 			}
@@ -437,6 +442,22 @@
 		}
 		target_points_length += points.length;
 		return points;
+	}
+
+	/**
+	 * 選択中のテキストパスを取得
+	 */
+	function get_selected_text_path() {
+		var text_frames = doc.text_frames;
+		var text_paths = [];
+		for (var i = 0; i < text_frames.length; i++) {
+			try {
+				var textPath = text_frames[i].textPath;
+				if(textPath.selectedPathPoints.length > 0) text_paths.push(textPath);
+			} catch(e) {
+			}
+		}
+		return text_paths;
 	}
 
 	/**
