@@ -21,7 +21,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = '数値でハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.12';
+	const SCRIPT_VERSION = '0.5.13';
 
 	// プレビュー用レイヤーの設定
 	const LAYER_NAME = '_gau_script_control_handles_with_numerical_values_preview_layer';
@@ -448,7 +448,7 @@
 	 * 選択中のテキストパスを取得
 	 */
 	function get_selected_text_path() {
-		var text_frames = doc.text_frames;
+		var text_frames = doc.textFrames;
 		var text_paths = [];
 		for (var i = 0; i < text_frames.length; i++) {
 			try {
