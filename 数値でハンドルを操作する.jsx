@@ -21,7 +21,7 @@
 
 	// タイトルとバージョン
 	const SCRIPT_TITLE = '数値でハンドルを操作する';
-	const SCRIPT_VERSION = '0.5.13';
+	const SCRIPT_VERSION = '0.5.14';
 
 	// プレビュー用レイヤーの設定
 	const LAYER_NAME = '_gau_script_control_handles_with_numerical_values_preview_layer';
@@ -373,14 +373,16 @@
 					var handle_distance = get_distance(path_point.anchor, target_direction) * length / 100;
 					var handle_radian = get_angle(path_point.anchor, target_direction, false);
 
+					var is_new_handle = !settings.new_handles && handle_distance !== 0;
+
 					if(both_sides_point === null || (settings.existing_handles_only && get_distance(path_point.anchor, target_direction) === 0) || (settings.existing_handles_no_control && handle_distance !== 0)) continue;
 
 					var coefficient = key === 'left' ? -1 : 1;
 					var radian = get_angle(path_point.anchor, both_sides_point.anchor, false);
 					var distance = get_distance(path_point.anchor, both_sides_point.anchor) * length / 100;
-					if(!settings.new_handles) {
-						radian = handle_distance !== 0 ? handle_radian : radian;
-						distance = handle_distance !== 0 ? handle_distance : distance;
+					if(is_new_handle) {
+						radian = handle_radian;
+						distance = handle_distance;
 					}
 					if(settings.reverse_motion) {
 						coefficient = -1;
@@ -389,7 +391,7 @@
 					path_point[key + 'Direction'] = position;
 					if(is_preview) {
 						draw_line(path_point.anchor, position, 1, 0.5, true);
-						draw_circle(position, 6, 1);
+						draw_circle(position, 8, 1, is_new_handle, 0.5);
 					}
 
 				}
@@ -566,14 +568,14 @@
 	 * 線を描画
 	 * @param {number} from 始点座標
 	 * @param {number} to 終点座標
-	 * @param {number} strokeWidth 線幅
+	 * @param {number} stroke_width 線幅
 	 * @param {number} opacity 透明度
 	 * @param {boolean} dashed 破線にするかどうか
 	 * @return {pathItem} 描画したパスアイテム
 	 */
-	function draw_line(from, to, strokeWidth, opacity, dashed) {
+	function draw_line(from, to, stroke_width, opacity, dashed) {
 
-		var sw = 1 / doc.views[0].zoom * strokeWidth;
+		var sw = 1 / doc.views[0].zoom * stroke_width;
 
 		var line = preview_layer.pathItems.add();
 		line.setEntirePath([from, to]);
@@ -608,14 +610,16 @@
 	 * @param {array} point 描画位置の座標
 	 * @param {number} diameter 直径
 	 * @param {number} opacity 透明度
+	 * @param {boolean} is_stroked 線をつけるか
+	 * @param {number} stroke_width 線幅
 	 * @return {pathItem} 描画したパスアイテム
 	 */
-	function draw_circle(point, diameter, opacity) {
+	function draw_circle(point, diameter, opacity, is_stroked, stroke_width) {
 
 		var di = 1 / doc.views[0].zoom * diameter;
 
 		var cir = preview_layer.pathItems.ellipse(point[1] + di / 2, point[0] - di / 2, di, di);
-		var color;
+		var color, white;
 		var dcs = doc.documentColorSpace;
 		if(dcs == DocumentColorSpace.CMYK) {
 			color = new CMYKColor();
@@ -623,15 +627,28 @@
 			color.cyan = 0;
 			color.magenta = 100;
 			color.yellow = 0;
+			white = new CMYKColor();
+			white.black = 0;
+			white.cyan = 0;
+			white.magenta = 0;
+			white.yellow = 0;
 		} else {
 			color = new RGBColor();
 			color.red = 255;
 			color.green = 0;
 			color.blue = 128;
+			white = new RGBColor();
+			white.red = 255;
+			white.green = 255;
+			white.blue = 255;
 		}
-		cir.stroked = false;
+		cir.stroked = is_stroked;
 		cir.filled = true;
-		cir.fillColor = color;
+		cir.fillColor = is_stroked ? white : color;
+		if(is_stroked) {
+			cir.strokeWidth = 1 / doc.views[0].zoom * stroke_width;
+			cir.strokeColor = color;
+		}
 		cir.opacity = opacity * 100;
 		return cir;
 	}
